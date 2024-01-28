@@ -94,8 +94,8 @@ class ALS_fit_1d:
         if sweep_sequence is None:
             sweep_sequence = self.opts['default_sweep_sequence']
 
-        RLs = itertools.cycle(sweep_sequence)
-        previous_LR = '0'
+        directions = itertools.cycle(sweep_sequence)
+        previous_direction = '0'
 
         self._b.expand_bond_dimension(self.max_bond, rand_strength=self.opts['bond_expand_rand_strength'])
         self._b.normalize()
@@ -103,18 +103,21 @@ class ALS_fit_1d:
         for sw in range(max_sweeps):
             if verbosity :
                 print("SWEEP-"+str(sw))
-            LR = next(RLs)
+            direction = next(directions)
             bprev = self._b.copy()
 
-            canonize = False if LR + previous_LR in {'LR', 'RL'} else True
+            canonize = False if direction + previous_direction in {'direction', 'RL'} else True
 
-            self.sweep(direction=LR, canonize=canonize, verbosity=verbosity)
+            self.sweep(direction=direction, canonize=canonize, verbosity=verbosity)
         
             self._b.normalize()
 
             ov = bprev.H @ self._b
             if abs(ov) > 1.0 - tol :
                 break
+            
+            previous_direction = direction
+
         return sw+1
     
 def mps_gate_with_mpo_als1dfit(
